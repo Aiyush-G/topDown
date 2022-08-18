@@ -41,8 +41,15 @@ class Player(pygame.sprite.Sprite):
         # Normalised vector: the vector should always be 1
         if self.direction.magnitude() > 0: # For a vector to be normalised it should be greater than 0 length
             self.direction = self.direction.normalize() # Without this going diagonal is root 2 speed instead of a single unit, therefore, faster.
-        self.pos += self.direction * self.speed * delta_time
-        self.rect.center = self.pos
+        
+        # For collision management the movements need to split into their components
+        # HORIZONTAL
+        self.pos.x += self.direction.x * self.speed * delta_time
+        self.rect.centerx = self.pos.x
+        # VERTICAL
+        self.pos.y += self.direction.y * self.speed * delta_time
+        self.rect.centery = self.pos.y
+        
     
     def update(self, delta_time):
         self.input()
