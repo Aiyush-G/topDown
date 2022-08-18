@@ -38,6 +38,9 @@ class Player(pygame.sprite.Sprite):
     
     def move(self, delta_time):
         # Framerate independence is achieved here
+        # Normalised vector: the vector should always be 1
+        if self.direction.magnitude() > 0: # For a vector to be normalised it should be greater than 0 length
+            self.direction = self.direction.normalize() # Without this going diagonal is root 2 speed instead of a single unit, therefore, faster.
         self.pos += self.direction * self.speed * delta_time
         self.rect.center = self.pos
     
