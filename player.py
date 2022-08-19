@@ -20,9 +20,15 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2() #x, y default: 0, 0 
         self.pos = pygame.math.Vector2(self.rect.center) # to be frame-rate independent vector 2 is needed
         self.speed = 200
+        
 
         # TOOLS
         self.selectedTool = "axe"
+
+        # TIMERS
+        self.timers = {
+            "toolUse" : Timer(350, self.use_tool)
+        }
     
     def import_assets(self):
         # Allows for dynamic loading of images without hardcoding paths directly
@@ -48,37 +54,35 @@ class Player(pygame.sprite.Sprite):
     def input(self):
         keys = pygame.key.get_pressed()
 
-        # MOVEMENT  
-        if keys[pygame.K_UP]:       #print("up")
-            self.direction.y = -1
-            self.status = "up"      # Animation
-        elif keys[pygame.K_DOWN]:   #print("down")    
-            self.direction.y = 1
-            self.status = "down"
-        else:                       # Refreshes every cycle so on nokey sprite shouldn't move
-            self.direction.y = 0
-            #self.status = "down_idle"
+        if not self.timers["toolUse"].active:
+            # MOVEMENT  
+            if keys[pygame.K_UP]:       #print("up")
+                self.direction.y = -1
+                self.status = "up"      # Animation
+            elif keys[pygame.K_DOWN]:   #print("down")    
+                self.direction.y = 1
+                self.status = "down"
+            else:                       # Refreshes every cycle so on nokey sprite shouldn't move
+                self.direction.y = 0
+                #self.status = "down_idle"
 
-        if keys[pygame.K_RIGHT]:    #print("right")
-            self.direction.x = 1
-            self.status = "right"
-        elif keys[pygame.K_LEFT]:   #print("left")
-            self.direction.x = -1
-            self.status = "left"
-        else:
-            self.direction.x = 0
-            #self.status = "down_idle"
-        # print(self.direction) >>> [0,0]
-
-        # TIMERS
-        self.timers = {
-            "toolUse" : Timer(350, self.use_tool)
-        }
+            if keys[pygame.K_RIGHT]:    #print("right")
+                self.direction.x = 1
+                self.status = "right"
+            elif keys[pygame.K_LEFT]:   #print("left")
+                self.direction.x = -1
+                self.status = "left"
+            else:
+                self.direction.x = 0
+                #self.status = "down_idle"
+            # print(self.direction) >>> [0,0]
 
         # TOOLS
         if keys[pygame.K_SPACE]:
             # If player clicks space then the tool is actice for a certain amount of time
             self.timers["toolUse"].activate()
+            self.direction = pygame.math.Vector2() # Stops the player from moving when the tool animation is in use
+            self.frameIndex = 0 # Restarts animation from beginning FIXED BUG
 
     def use_tool(self):
         print(self.selectedTool)
@@ -87,11 +91,16 @@ class Player(pygame.sprite.Sprite):
         # IDLE
         # If player isn't moving then transfer to idle state
         if self.direction.magnitude() == 0:
-            self.status = self.status.split("_")[0]+ "_idle" # Look at the naming of the animations: left_idle, down_idle, up_idle, right_idle
+            self.status = f"{self.status.split('_')[0]}_idle" # Look at the naming of the animations: left_idle, down_idle, up_idle, right_idle
 
         if self.timers["toolUse"].active:
-            print("tool is in use")
-        
+            self.status = f"{self.status.split('_')[0]}_{self.selectedTool}"
+            
+    
+    def update_timers(self):
+        for timer in self.timers.values(): # Itterates over each individual timer
+            timer.update()
+
     def move(self, deltaTime):
         # Framerate independence is achieved here
         # Normalised vector: the vector should always be 1
@@ -109,6 +118,7 @@ class Player(pygame.sprite.Sprite):
     
     def update(self, deltaTime):
         self.input()
+        self.update_timers()
         self.get_status()
         self.move(deltaTime)
         self.animate(deltaTime)
