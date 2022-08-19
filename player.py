@@ -1,13 +1,17 @@
 import pygame
 from settings import *
+from utils import *
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group) # As soon as Player is instanced the object will be inside of this group
-        
+
         # SETUP
-        self.image = pygame.Surface((32, 64)) 
-        self.image.fill("green")
+        self.import_assets() # Animations
+        self.status = "down_idle" # Status of player
+        self.frameIndex = 0 # Animation reference
+        self.image = self.animations[self.status][self.frameIndex] # Gets 
+        # OLD CODE self.image.fill("green") 
         self.rect = self.image.get_rect(center = pos)
 
         # MOVEMENT
@@ -16,6 +20,20 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2() #x, y default: 0, 0 
         self.pos = pygame.math.Vector2(self.rect.center) # to be frame-rate independent vector 2 is needed
         self.speed = 200
+    
+    def import_assets(self):
+        # Allows for dynamic loading of images without hardcoding paths directly
+        self.animations = {'up': [],'down': [],'left': [],'right': [],
+						   'right_idle':[],'left_idle':[],'up_idle':[],'down_idle':[],
+						   'right_hoe':[],'left_hoe':[],'up_hoe':[],'down_hoe':[],
+						   'right_axe':[],'left_axe':[],'up_axe':[],'down_axe':[],
+						   'right_water':[],'left_water':[],'up_water':[],'down_water':[]}
+        
+        for animation in self.animations.keys(): # Itterates over the key value pairs for the surfaces as the values
+            fullPath = "graphics/character/" + animation
+            self.animations[animation] = import_path(fullPath)
+        
+        print(self.animations)
     
     def input(self):
         keys = pygame.key.get_pressed()
