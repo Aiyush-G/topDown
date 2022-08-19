@@ -90,11 +90,11 @@ class Player(pygame.sprite.Sprite):
         # CHANGE TOOL
         # If the "t" key is held down for multiple inputs then the index keeps changing, to solve this an additional timer 
         # is implemented here
-        if keys[pygame.K_t] and self.timers["toolSwitch"].active:
+        if keys[pygame.K_t] and not self.timers["toolSwitch"].active:
             self.timers["toolSwitch"].activate()
             print(self.toolIndex)
-            if self.toolIndex > len(self.tools): self.toolIndex = -1
             self.toolIndex += 1
+            self.toolIndex = self.toolIndex if self.toolIndex < len(self.tools) else 0 
             self.selectedTool = self.tools[self.toolIndex]
 
     def use_tool(self):
