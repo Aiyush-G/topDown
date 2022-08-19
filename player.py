@@ -20,6 +20,9 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2() #x, y default: 0, 0 
         self.pos = pygame.math.Vector2(self.rect.center) # to be frame-rate independent vector 2 is needed
         self.speed = 200
+
+        # TOOLS
+        self.selectedTool = "axe"
     
     def import_assets(self):
         # Allows for dynamic loading of images without hardcoding paths directly
@@ -33,28 +36,63 @@ class Player(pygame.sprite.Sprite):
             fullPath = "graphics/character/" + animation
             self.animations[animation] = import_path(fullPath)
         
-        print(self.animations)
+        #print(self.animations)
+    
+    def animate(self, deltaTime):
+        # Loops over the individual sprites surfaces smoothly and returns back to first sprite image at the end
+        self.frameIndex += 4 * deltaTime
+        if self.frameIndex >= len(self.animations[self.status]):
+            self.frameIndex = 0
+        self.image = self.animations[self.status][int(self.frameIndex)]
     
     def input(self):
         keys = pygame.key.get_pressed()
 
+        # MOVEMENT  
         if keys[pygame.K_UP]:       #print("up")
             self.direction.y = -1
+            self.status = "up"      # Animation
         elif keys[pygame.K_DOWN]:   #print("down")    
             self.direction.y = 1
+            self.status = "down"
         else:                       # Refreshes every cycle so on nokey sprite shouldn't move
-            self.direction.y = 0 
+            self.direction.y = 0
+            #self.status = "down_idle"
 
         if keys[pygame.K_RIGHT]:    #print("right")
             self.direction.x = 1
+            self.status = "right"
         elif keys[pygame.K_LEFT]:   #print("left")
             self.direction.x = -1
+            self.status = "left"
         else:
             self.direction.x = 0
-        
+            #self.status = "down_idle"
         # print(self.direction) >>> [0,0]
-    
-    def move(self, delta_time):
+
+        # TIMERS
+        self.timers = {
+            "toolUse" : Timer(350, self.use_tool)
+        }
+
+        # TOOLS
+        if keys[pygame.K_SPACE]:
+            # If player clicks space then the tool is actice for a certain amount of time
+            self.timers["toolUse"].activate()
+
+    def use_tool(self):
+        print(self.selectedTool)
+
+    def get_status(self):
+        # IDLE
+        # If player isn't moving then transfer to idle state
+        if self.direction.magnitude() == 0:
+            self.status = self.status.split("_")[0]+ "_idle" # Look at the naming of the animations: left_idle, down_idle, up_idle, right_idle
+
+        if self.timers["toolUse"].active:
+            print("tool is in use")
+        
+    def move(self, deltaTime):
         # Framerate independence is achieved here
         # Normalised vector: the vector should always be 1
         if self.direction.magnitude() > 0: # For a vector to be normalised it should be greater than 0 length
@@ -62,13 +100,15 @@ class Player(pygame.sprite.Sprite):
         
         # For collision management the movements need to split into their components
         # HORIZONTAL
-        self.pos.x += self.direction.x * self.speed * delta_time
+        self.pos.x += self.direction.x * self.speed * deltaTime
         self.rect.centerx = self.pos.x
         # VERTICAL
-        self.pos.y += self.direction.y * self.speed * delta_time
+        self.pos.y += self.direction.y * self.speed * deltaTime
         self.rect.centery = self.pos.y
         
     
-    def update(self, delta_time):
+    def update(self, deltaTime):
         self.input()
-        self.move(delta_time)
+        self.get_status()
+        self.move(deltaTime)
+        self.animate(deltaTime)
