@@ -23,11 +23,14 @@ class Player(pygame.sprite.Sprite):
         
 
         # TOOLS
-        self.selectedTool = "axe"
+        self.tools = ["hoe", "axe", "water"]
+        self.toolIndex = 0
+        self.selectedTool = self.tools[self.toolIndex]
 
         # TIMERS
         self.timers = {
-            "toolUse" : Timer(350, self.use_tool)
+            "toolUse" : Timer(350, self.use_tool), 
+            "toolSwitch" : Timer(250)
         }
     
     def import_assets(self):
@@ -83,9 +86,20 @@ class Player(pygame.sprite.Sprite):
             self.timers["toolUse"].activate()
             self.direction = pygame.math.Vector2() # Stops the player from moving when the tool animation is in use
             self.frameIndex = 0 # Restarts animation from beginning FIXED BUG
+        
+        # CHANGE TOOL
+        # If the "t" key is held down for multiple inputs then the index keeps changing, to solve this an additional timer 
+        # is implemented here
+        if keys[pygame.K_t] and self.timers["toolSwitch"].active:
+            self.timers["toolSwitch"].activate()
+            print(self.toolIndex)
+            if self.toolIndex > len(self.tools): self.toolIndex = -1
+            self.toolIndex += 1
+            self.selectedTool = self.tools[self.toolIndex]
 
     def use_tool(self):
-        print(self.selectedTool)
+        pass
+        #print(self.selectedTool)
 
     def get_status(self):
         # IDLE
